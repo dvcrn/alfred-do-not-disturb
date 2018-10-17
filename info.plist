@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.davidmohl.alfred-dnd-toggle</string>
+	<key>category</key>
+	<string>Tools</string>
+	<key>connections</key>
+	<dict>
+		<key>5F8D9E74-90AD-45C1-809F-3C55F2319B25</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>922A7877-268E-4BDE-A504-F27AF98ACFBA</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>BA3FFB21-2838-492A-87BC-71F75C89441A</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>5F8D9E74-90AD-45C1-809F-3C55F2319B25</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>David Mohl</string>
+	<key>description</key>
+	<string>Toggle Do Not Disturb</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Do Not Disturb</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string># Based On The OneUpdater workflow, but heavily simplified for github releases
+# https://github.com/vitorgalvao/alfred-workflows/tree/master/OneUpdater
+
+# THESE VARIABLES MUST BE SET.
+readonly github_repo='dvcrn/alfred-do-not-disturb'
+readonly frequency_check='7' # days
+
+# FROM HERE ON, CODE SHOULD BE LEFT UNTOUCHED!
+readonly info_plist='info.plist'
+
+function abort {
+  echo "${1}" &gt;&amp;2
+  exit 1
+}
+
+function notification {
+  osascript -e "display notification \"${1}\" with title \"${alfred_workflow_name}\" subtitle \"A new version is available\""
+}
+
+function fetch_remote_version {
+  curl --silent "https://api.github.com/repos/${github_repo}/releases/latest" | grep 'tag_name' | head -1 | sed -E 's/.*tag_name": "v?(.*)".*/\1/'
+}
+
+function fetch_download_url {
+  curl --silent "https://api.github.com/repos/${github_repo}/releases/latest" | grep 'browser_download_url.*\.alfredworkflow"' | head -1 | sed -E 's/.*browser_download_url": "(.*)".*/\1/'
+}
+
+function download_and_install {
+  readonly tmpfile="$(mktemp).alfredworkflow"
+  notification 'Downloading and installing…'
+  curl --silent --location --output "${tmpfile}" "${1}"
+  open "${tmpfile}"
+}
+
+# Local sanity checks
+[[ -n "${alfred_workflow_version}" ]] || abort "'alfred_workflow_version' must be set."
+[[ -n "${alfred_workflow_name}" ]] || abort "'alfred_workflow_name' must be set."
+[[ "${github_repo}" =~ ^.+\/.+$ ]] || abort "'github_repo' (${github_repo}) must be in the format 'username/repo'."
+[[ "${frequency_check}" =~ ^[0-9]+$ ]] || abort "'frequency_check' (${frequency_check}) must be a number."
+
+# Check for updates
+if [[ $(find "${info_plist}" -mtime +"${frequency_check}"d) ]]; then
+  if [[ "${alfred_workflow_version}" == "$(fetch_remote_version)" ]]; then
+    touch "${info_plist}" # Reset timer by touching local file
+    exit 0
+  fi
+
+  download_and_install "$(fetch_download_url)"
+fi</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>922A7877-268E-4BDE-A504-F27AF98ACFBA</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>query=$1
+
+echo "test"
+
+./do-not-disturb $query</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>5F8D9E74-90AD-45C1-809F-3C55F2319B25</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>fixedorder</key>
+				<true/>
+				<key>items</key>
+				<string>[{"title":"Toggle","arg":"toggle","subtitle":"Toggle Do Not Disturb"},{"imagefile":"d428cbe2a240de457debed677a951ce7a9b60bb0.png","title":"On","arg":"on","subtitle":"Enable Do Not Disturb"},{"imagefile":"9ab271d594e30f3a2173c7d7b86fd0b6e02250ce.png","title":"Off","arg":"off","subtitle":"Disable Do Not Disturb"}]</string>
+				<key>keyword</key>
+				<string>dnd</string>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string>Toggle Do Not Disturb mode</string>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.listfilter</string>
+			<key>uid</key>
+			<string>BA3FFB21-2838-492A-87BC-71F75C89441A</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>5F8D9E74-90AD-45C1-809F-3C55F2319B25</key>
+		<dict>
+			<key>xpos</key>
+			<integer>600</integer>
+			<key>ypos</key>
+			<integer>260</integer>
+		</dict>
+		<key>922A7877-268E-4BDE-A504-F27AF98ACFBA</key>
+		<dict>
+			<key>note</key>
+			<string>Auto Update - remove to disable</string>
+			<key>xpos</key>
+			<integer>850</integer>
+			<key>ypos</key>
+			<integer>260</integer>
+		</dict>
+		<key>BA3FFB21-2838-492A-87BC-71F75C89441A</key>
+		<dict>
+			<key>xpos</key>
+			<integer>260</integer>
+			<key>ypos</key>
+			<integer>260</integer>
+		</dict>
+	</dict>
+	<key>version</key>
+	<string>1.0.1</string>
+	<key>webaddress</key>
+	<string>https://github.com/dvcrn/alfred-do-not-disturb</string>
+</dict>
+</plist>
